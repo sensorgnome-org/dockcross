@@ -184,6 +184,26 @@ jobs:
       - save_cache:
           key: linux-armv7-assets-{{ .Revision }}
           paths: ~/docker/linux-armv7.tar
+  linux-armv7-hf:
+    <<: *build-settings
+    steps:
+      - restore_cache:
+          key: base-assets-{{ .Revision }}
+      - run:
+         name: linux-armv7-hf build
+         no_output_timeout: 1.5h
+         command: |
+           docker load -i ~/docker/base.tar
+           make linux-armv7-hf
+           tagged=$(docker images -q -f 'since=dockcross/linux-armv7-hf:latest' --format '{{.Repository}}:{{.Tag}}' | grep linux-armv7-hf)
+           docker save -o ~/docker/linux-armv7-hf.tar dockcross/linux-armv7-hf:latest $tagged
+      - run:
+         name: linux-armv7-hf test
+         command: |
+           make linux-armv7-hf.test
+      - save_cache:
+          key: linux-armv7-hf-assets-{{ .Revision }}
+          paths: ~/docker/linux-armv7-hf.tar
   linux-armv7a:
     <<: *build-settings
     steps:
@@ -842,6 +862,9 @@ workflows:
         - linux-armv7:
             requires:
               - base
+        - linux-armv7-hf:
+            requires:
+              - base
         - linux-armv7a:
             requires:
               - base
@@ -904,6 +927,7 @@ workflows:
               - linux-armv5
               - linux-armv6
               - linux-armv7
+              - linux-army-hf
               - linux-armv7a
               #- linux-mipsel
               - linux-s390x
